@@ -14,8 +14,10 @@ const PORT = process.env.SERVER_PORT || 3000
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use('/api', router);
-app.use(express.static('./public'));
+//app.use(express.static('./public'));
 app.use(express.static('./public/fakers'));
+app.use(express.static('./public/messageCenter'));
+
 
 
 
