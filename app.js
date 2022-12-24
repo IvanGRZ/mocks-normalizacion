@@ -36,7 +36,7 @@ io.on('connection', (socket) => {
     socket.emit('UPDATEFAKEPRODUCT', fakeProducts);
 
 
-    socket.on('NEW_MESSAGE_TO_SERVER', data => {
+    socket.on('NEW_MESSAGE_TO_SERVER', (data, mail) => {
         messages.push(data)
         io.sockets.emit('NEW_MESSAGE_FROM_SERVER', data);
     });

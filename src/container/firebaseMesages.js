@@ -1,17 +1,40 @@
 import {db} from '../utils/firebase.js'
+import {normalizeAndDenormalize} from '../utils/normalizr.js'
 
 class firebaseMesages {
 
     constructor(collectionName) {
-        this.collection = db.collection(collectionName);
+        this.customPath = collectionName;
     }
 
     async addMessage(obj){
         try{
+
+            const count = db.ref('/entities/messages').once('value').then(snapshot => {return snapshot.numChildren()}).catch(e => console.log(e))
+            const id = await count;
+            const userID = obj[0].id;
+
+            obj.map(item => {
+                if(item.type == 'messages'){
+                    item.id = id
+                }
+            })
+
+            const messagesNormalized = normalizeAndDenormalize("normalize", obj);
+            const entities = messagesNormalized['entities']
+
+            db.ref(`/entities/messages/${id}`).update(entities.messages[id], error => {
+                if (error){
+                    console.log("Failed with error: " + error)
+                }
+                else{
+                    console.log("success")
+                    return messagesNormalized;
+                }                
+            });
+
             
-            const result = await this.collection.set(obj[0]);   
-            
-            return result;
+
         }
         catch(error){
             console.log(error)
@@ -19,21 +42,33 @@ class firebaseMesages {
     }
 
     async getAll(obj){
+
         try{
-            const userRef = this.collection.doc('knoEEPH9dZBcMVnqCGGU');
-            const snapshot = await userRef.get()
-            let conected = {}
 
-            snapshot._fieldsProto.users.arrayValue.values.forEach(element => {
-                if( element.mapValue.fields.author.mapValue.fields.id.stringValue == obj.mailIDValue){
-                    conected =  {
-                        connected: 'true',
-                        info: snapshot._fieldsProto.users.arrayValue.values
-                    }
+            let user = obj.mailIDValue.toString()
+            let connected = {}
+            let messagesDenormalized;
+        
+            const data = db.ref().once('value').then(snapshot => {return snapshot.val()}).catch(e => console.log(e))
+            const resolveData = await data
+            messagesDenormalized =  normalizeAndDenormalize("denormalize",  resolveData);
+
+            let result = messagesDenormalized.entities.author[user]
+
+            if(result != undefined){
+                connected = {
+                    connected: 'true',
+                    info: messagesDenormalized.entities
                 }
-            });
-            return conected
+            }
+            else{
+                connected = {
+                    connected: 'false',
+                    info: {}
+                }
+            }
 
+            return connected
         }
         catch(error){
             console.log(error)

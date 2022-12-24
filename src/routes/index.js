@@ -49,8 +49,7 @@ router.post('/addMessages', async (req, res, next) => {
 
 router.post('/getMessagesFirebase', async(req, res) => {
     let obj = req.body;
-    messageDao.getAll(obj)
-    .then(result => {
+    messageDao.getAll(obj).then(result => {
         res.status(200).json({result})
     })
     .catch(error => res.status(500).json(error))
